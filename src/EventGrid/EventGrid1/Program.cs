@@ -14,7 +14,7 @@ namespace AzureServerless.EventGrid1
     {
         static async Task Main(string[] args)
         {
-            SendToEventGrid();
+            await SendToEventGrid();
 
             await SendToEventGridWithSdk();
         }
@@ -59,7 +59,7 @@ namespace AzureServerless.EventGrid1
             }
         }
 
-        protected static void SendToEventGrid()
+        protected static async Task SendToEventGrid()
         {
             string endpoint = ConfigurationManager.AppSettings["eventGridTopicHostName"];
             string sharedAccessKey = ConfigurationManager.AppSettings["eventGridTopicKey"];
@@ -99,7 +99,7 @@ namespace AzureServerless.EventGrid1
                 httpContent.Headers.Add("aeg-sas-key", sharedAccessKey);
                 using (var httpClient = new HttpClient())
                 {
-                    using (var httpResponseMessage = httpClient.PostAsync(publisherAddress, httpContent).Result)
+                    using (var httpResponseMessage = await httpClient.PostAsync(publisherAddress, httpContent))
                     {
                         Console.WriteLine($"Reponse status code: {httpResponseMessage.StatusCode}");
                     }
