@@ -1,0 +1,9 @@
+-- Create an Azure Function in VS Code
+func init MyFunctions --no-source-control
+func new --language JavaScript --template HttpTrigger --name HelloWorldJS
+
+
+
+{"PersonName": "Michael Collier", "BlobName":"michael.jpg"}
+
+{"PersonName": "sonjaandmike", "BlobName":"stlucia.jpg"}

@@ -1,0 +1,17 @@
+{
+    "scriptFile": "./bin/Debug/netstandard2.0/bin/FunctionApp1.dll",
+    "entryPoint": "FunctionApp1.Function1.HelloWorld",
+    "bindings": [{
+            "authLevel": "function",
+            "name": "req",
+            "type": "httpTrigger",
+            "direction": "in"
+        },
+        {
+            "name": "$return",
+            "type": "http",
+            "direction": "out"
+        }
+    ],
+    "disabled": false
+}
