@@ -7,7 +7,7 @@
     - Storage Account: mcollierascend
     - Container Name: imageanalysis
 - Open Windows Explorer to C:\temp\demo-pics
-- Create HookBin.com endpoints
+- Create https://requestb.in/ endpoints
 
 ## 1 - Azure Functions
 ### Show a basic C# Hello World
@@ -70,10 +70,10 @@
 2. Run `EventGrid` project
    - `SendToEventGrid`
    - `SendToEventGridWithSdk`
-3. Show results in Hookbin.com
+3. Show results at https://requestb.in/
 
 ### Show Azure Storage blob subscription
-1. Show results in Hookbin.com for all the storage events created from **mcollierascend** storage account.
-   - https://hookbin.com/bin/Zm88anN7
+1. Show results at https://requestb.in/ for all the storage events created from **mcollierascend** storage account.
+   - https://requestb.in/tz40rntz?inspect
 
 ## 4 - Final Demo - Customer Car Reviews
