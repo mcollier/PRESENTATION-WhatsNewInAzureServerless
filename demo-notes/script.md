@@ -4,10 +4,10 @@
 - Open Visual Studio 2017 to `AzureServerless.sln`
 - Open Azure Storage Explorer
   - Copy sample images to storage account:
-    - Storage Account: mcollierascend
+    - Storage Account: gab2018fun
     - Container Name: imageanalysis
 - Open Windows Explorer to C:\temp\demo-pics
-- Create https://requestb.in/ endpoints
+
 
 ## 1 - Azure Functions
 ### Show a basic C# Hello World
@@ -15,7 +15,7 @@
 - Run in Visual Studio
 - Show running via browser
     - http://localhost:7071/api/HelloWorld?name=michael
-    - https://gab18fun.azurewebsites.net/api/HelloWorld?code=kr5tCathLgf/455elqlByOI/s4E42a3PaMaypWDqmSP8TfuUlhGHnw==
+    - https://gab18fun.azurewebsites.net/api/HelloWorld?name=Columbus%20Global%20Azure%20Bootcamp&code=kr5tCathLgf/455elqlByOI/s4E42a3PaMaypWDqmSP8TfuUlhGHnw==
 
 
 ### Show Image Analyzer
@@ -47,7 +47,7 @@
 ```
 
 ## 2 - Logic Apps
-### Show `mcollier-ascend-image-logic` Logic App in Azure Portal
+### Show `ImageAnalysis` Logic App in Azure Portal
 1. Go to 'Edit' tab to see workflow. Discuss.
     - Does mostly the same thing as the Azure Function dicussed early. However, instead of polling on a queue and looking for blobs, it is watching for blob modifications and retrieving the content directly.
     - Analyzes the image

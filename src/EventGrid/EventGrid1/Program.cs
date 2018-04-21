@@ -31,15 +31,16 @@ namespace AzureServerless.EventGrid1
 
                 IList<EventGridEvent> events = new List<EventGridEvent>
                 {
-                    new EventGridEvent
-                    {
-                        EventTime = DateTime.UtcNow,
-                        Id = Guid.NewGuid().ToString(),
-                        Subject = "customer/Contoso",
-                        DataVersion = "1.0",
-                        EventType = "CustomerCreated",
-                        Data = new {TenantId = "112345", ContactId = "foo34343"}
-                    },
+                    // NOTE: Anonymous types don't get sent through when using the SDK; serialization problem.
+                    //new EventGridEvent
+                    //{
+                    //    EventTime = DateTime.UtcNow,
+                    //    Id = Guid.NewGuid().ToString(),
+                    //    Subject = "customer/Contoso",
+                    //    DataVersion = "1.0",
+                    //    EventType = "CustomerCreated",
+                    //    Data = new {TenantId = "112345", ContactId = "foo34343"}
+                    //},
                     new EventGridEvent
                     {
                         EventTime = DateTime.UtcNow,
