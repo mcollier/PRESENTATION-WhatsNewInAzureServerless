@@ -12,18 +12,26 @@ using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
 using System;
 using System.IO;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace FunctionApp1
 {
     public static class ImageAnalyzerFunction
     {
-        private static DocumentClient documentClient;
-        private static string VisionApiKey;
-        private static string VisionApiRegion;
+        private static DocumentClient _documentClient;
+        private static string _visionApiKey;
 
         private static readonly string VisionApiKeySecretUri = Environment.GetEnvironmentVariable("computerVisionApiKeySecretUri");
-        private static readonly string VisionApiRegionSecretUri = Environment.GetEnvironmentVariable("computerVisionApiRegionSecretUri");
+        
+        //private static string VisionApiRegion;
+        //private static readonly string VisionApiRegionSecretUri = Environment.GetEnvironmentVariable("computerVisionApiRegionSecretUri");
+
+        private static readonly HttpClient VisionApiHttpClient = new HttpClient();
 
         [FunctionName("ImageAnalyzer")]
         public static async Task AnalyzeImage(
@@ -40,10 +48,10 @@ namespace FunctionApp1
                 var sasBlobUri = GetImageSharedAccessSignature(inputBlob);
 
                 // Use Computer Vision API to analyze the image.
-                var analysisResult = AnalyzeImage(sasBlobUri, log);
+                var analysisResult = await AnalyzeImage(sasBlobUri, log);
 
                 // Save the results to a database.
-                await SaveImageAnalysis(analysisResult.Result, inputBlob.Uri.ToString(), log);
+                await SaveImageAnalysis(analysisResult, inputBlob.Uri.ToString(), log);
             }
             catch (Exception e)
             {
@@ -64,7 +72,7 @@ namespace FunctionApp1
             string dbKeySecretUri = Environment.GetEnvironmentVariable("cosmosDbAuthKeySecretUri");
             string cosmosDbUri = Environment.GetEnvironmentVariable("cosmosDbUri");
 
-            if (documentClient == null)
+            if (_documentClient == null)
             {
                 // Use Azure Managed Service Identity to authenticate with Azure Key Vault.
                 AzureServiceTokenProvider tokenProvider = new AzureServiceTokenProvider();
@@ -72,11 +80,11 @@ namespace FunctionApp1
                     new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(tokenProvider.KeyVaultTokenCallback));
 
                 var key = await kvClient.GetSecretAsync(dbKeySecretUri).ConfigureAwait(false);
-                documentClient = new DocumentClient(new Uri(cosmosDbUri), key.Value);
+                _documentClient = new DocumentClient(new Uri(cosmosDbUri), key.Value);
             }
 
-            await documentClient.CreateDatabaseIfNotExistsAsync(new Database { Id = dbName });
-            await documentClient.CreateDocumentCollectionIfNotExistsAsync(
+            await _documentClient.CreateDatabaseIfNotExistsAsync(new Database { Id = dbName });
+            await _documentClient.CreateDocumentCollectionIfNotExistsAsync(
                 UriFactory.CreateDatabaseUri(dbName), new DocumentCollection { Id = collectionName },
                 new RequestOptions { OfferThroughput = 400 });
 
@@ -87,7 +95,7 @@ namespace FunctionApp1
                 Analysis = analysisResult
             };
 
-            await documentClient.CreateDocumentAsync(
+            await _documentClient.CreateDocumentAsync(
                 UriFactory.CreateDocumentCollectionUri(dbName, collectionName), imageInfo);
         }
 
@@ -95,26 +103,42 @@ namespace FunctionApp1
         {
             log.LogInformation($"Starting to analyze image with Computer Vision API.");
 
-            // Use Azure Managed Service Identity to authenticate with Azure Key Vault.
-            AzureServiceTokenProvider tokenProvider = new AzureServiceTokenProvider();
-            KeyVaultClient kvClient =
-                new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(tokenProvider.KeyVaultTokenCallback));
-
-            if (VisionApiKey == null)
+            if (_visionApiKey == null)
             {
+                // Use Azure Managed Service Identity to authenticate with Azure Key Vault.
+                AzureServiceTokenProvider tokenProvider = new AzureServiceTokenProvider();
+                KeyVaultClient kvClient =
+                    new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(tokenProvider.KeyVaultTokenCallback));
+
                 var apiKeySecretBundle = await kvClient.GetSecretAsync(VisionApiKeySecretUri).ConfigureAwait(false);
-                VisionApiKey = apiKeySecretBundle.Value;
+                _visionApiKey = apiKeySecretBundle.Value;
             }
 
-            if (VisionApiRegion == null)
+            // Note: Had trouble getting SDK to work; get excepion related to invalid URI.
+            // Using REST API until I figure out the problem.
+            //var visionClient = new VisionServiceClient(VisionApiKey, VisionApiRegion);
+            //var features = new VisualFeature[] { VisualFeature.Tags, VisualFeature.Description };
+            //var analysisResult = await visionClient.AnalyzeImageAsync(imageUrl, features);
+
+            string visionApiUrl = "https://eastus.api.cognitive.microsoft.com/vision/v1.0/analyze?visualFeatures=Description,Tags&language=en";
+            var url = new {url = imageUrl};
+            string payload = JsonConvert.SerializeObject(url);
+            AnalysisResult analysisResult = null;
+            using (var httpContent = new StringContent(payload, Encoding.UTF8, "application/json"))
             {
-                var apiRegionSecretBundle = await kvClient.GetSecretAsync(VisionApiRegionSecretUri).ConfigureAwait(false);
-                VisionApiRegion = apiRegionSecretBundle.Value;
-            }
+                httpContent.Headers.Add("Ocp-Apim-Subscription-Key", _visionApiKey);
+                using (var httpResponseMessage = await VisionApiHttpClient.PostAsync(visionApiUrl, httpContent))
+                {
+                    Console.WriteLine($"Reponse status code: {httpResponseMessage.StatusCode}");
+                    if (httpResponseMessage.StatusCode == HttpStatusCode.OK)
+                    {
+                        string result = await httpResponseMessage.Content.ReadAsStringAsync();
+                        log.LogInformation(result);
 
-            var visionClient = new VisionServiceClient(VisionApiKey, VisionApiRegion);
-            var features = new VisualFeature[] { VisualFeature.Tags, VisualFeature.Description };
-            var analysisResult = await visionClient.AnalyzeImageAsync(imageUrl, features);
+                        analysisResult = JsonConvert.DeserializeObject<AnalysisResult>(result);
+                    }
+                }
+            }
 
             return analysisResult;
         }
@@ -124,7 +148,7 @@ namespace FunctionApp1
             SharedAccessBlobPolicy sasConstraints = new SharedAccessBlobPolicy
             {
                 SharedAccessStartTime = DateTimeOffset.UtcNow.AddMinutes(-5),
-                SharedAccessExpiryTime = DateTimeOffset.UtcNow.AddMinutes(10),
+                SharedAccessExpiryTime = DateTimeOffset.UtcNow.AddMinutes(20),
                 Permissions = SharedAccessBlobPermissions.Read
             };
 
