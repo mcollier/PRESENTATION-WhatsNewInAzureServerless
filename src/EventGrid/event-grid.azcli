@@ -6,6 +6,8 @@ az eventgrid topic create --name cbusevents -l centralus -g cbus-eventgrid
 az eventgrid topic show --name cbusevents -g cbus-eventgrid --query "endpoint" --output tsv
 az eventgrid topic key list --name cbusevents -g cbus-eventgrid --query "key1" --output tsv
 
+## REMINDER - CREATE THE REQUESTBIN BEFORE PROCEEEDING!!!!
+
 # Subscribe to events
 az eventgrid event-subscription create -g cbus-eventgrid --topic-name cbusevents --name mysubscriptions --endpoint https://mcollier-requestbin.herokuapp.com/XX --included-event-types "All"
 

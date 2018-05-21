@@ -28,9 +28,6 @@ namespace FunctionApp1
 
         private static readonly string VisionApiKeySecretUri = Environment.GetEnvironmentVariable("computerVisionApiKeySecretUri");
 
-        //private static string VisionApiRegion;
-        //private static readonly string VisionApiRegionSecretUri = Environment.GetEnvironmentVariable("computerVisionApiRegionSecretUri");
-
         private static readonly HttpClient VisionApiHttpClient = new HttpClient();
 
         [FunctionName("ImageAnalyzer")]
