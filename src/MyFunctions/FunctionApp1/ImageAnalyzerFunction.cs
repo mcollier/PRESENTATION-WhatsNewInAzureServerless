@@ -27,7 +27,7 @@ namespace FunctionApp1
         private static string _visionApiKey;
 
         private static readonly string VisionApiKeySecretUri = Environment.GetEnvironmentVariable("computerVisionApiKeySecretUri");
-        
+
         //private static string VisionApiRegion;
         //private static readonly string VisionApiRegionSecretUri = Environment.GetEnvironmentVariable("computerVisionApiRegionSecretUri");
 
@@ -121,7 +121,7 @@ namespace FunctionApp1
             //var analysisResult = await visionClient.AnalyzeImageAsync(imageUrl, features);
 
             string visionApiUrl = "https://eastus.api.cognitive.microsoft.com/vision/v1.0/analyze?visualFeatures=Description,Tags&language=en";
-            var url = new {url = imageUrl};
+            var url = new { url = imageUrl };
             string payload = JsonConvert.SerializeObject(url);
             AnalysisResult analysisResult = null;
             using (var httpContent = new StringContent(payload, Encoding.UTF8, "application/json"))
@@ -130,12 +130,17 @@ namespace FunctionApp1
                 using (var httpResponseMessage = await VisionApiHttpClient.PostAsync(visionApiUrl, httpContent))
                 {
                     Console.WriteLine($"Reponse status code: {httpResponseMessage.StatusCode}");
+                    string result = await httpResponseMessage.Content.ReadAsStringAsync();
+
                     if (httpResponseMessage.StatusCode == HttpStatusCode.OK)
                     {
-                        string result = await httpResponseMessage.Content.ReadAsStringAsync();
                         log.LogInformation(result);
 
                         analysisResult = JsonConvert.DeserializeObject<AnalysisResult>(result);
+                    }
+                    else
+                    {
+                        log.LogError(result);
                     }
                 }
             }
