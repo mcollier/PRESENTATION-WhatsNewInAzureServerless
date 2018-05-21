@@ -11,6 +11,8 @@ public static class HelloSequence
 
         outputs.Add(await context.CallActivityAsync<string>("E1_SayHello", "Seattle"));
         outputs.Add(await context.CallActivityAsync<string>("E1_SayHello", "Columbus"));
+        outputs.Add(await context.CallActivityAsync<string>("E1_SayHello", "Marysville"));
+        outputs.Add(await context.CallActivityAsync<string>("E1_SayHello", "London"));
 
         return outputs;
     }
