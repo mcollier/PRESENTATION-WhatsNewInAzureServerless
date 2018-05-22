@@ -1,21 +1,25 @@
 
 # Create an Event Grid topic.
-az eventgrid topic create --name ascend -l centralus -g mcollier-ascend
+az eventgrid topic create --name cbusevents -l centralus -g cbus-eventgrid
 
-# TODO: Creat an endpoint
+# Get the endpoint and key
+az eventgrid topic show --name cbusevents -g cbus-eventgrid --query "endpoint" --output tsv
+az eventgrid topic key list --name cbusevents -g cbus-eventgrid --query "key1" --output tsv
 
-az eventgrid topic show --name ascend -g mcollier-ascend --query "endpoint" --output tsv
-
-az eventgrid topic key list --name ascend -g mcollier-ascend --query "key1" --output tsv
-
+## REMINDER - CREATE THE REQUESTBIN BEFORE PROCEEEDING!!!!
 
 # Subscribe to events
-az eventgrid event-subscription create -g mcollier-ascend --topic-name ascend --name mysubscriptions --endpoint https://requestb.in/woumsvwo --included-event-types "All"
+az eventgrid event-subscription create -g cbus-eventgrid --topic-name cbusevents --name mysubscriptions --endpoint https://mcollier-requestbin.herokuapp.com/XX --included-event-types "All"
 
-# filters
-az eventgrid event-subscription create -g mcollier-ascend --topic-name ascend --name contoso-customer-created --endpoint https://requestb.in/z0twdhz0 --included-event-types "CustomerCreated" --subject-ends-with "Contoso" --subject-case-sensitive "false"
 
-# Azure blob storage
-az storage account show --name mcollierascend --resource-group mcollier-ascend --query id --output tsv
+# Create a new topic with custom mapping.
 
-az eventgrid event-subscription create --resource-id /subscriptions/SUBSCRIPTION-ID/resourceGroups/mcollier-ascend/providers/Microsoft.Storage/storageAccounts/mcollierascend --name myimageevents --endpoint https://hookbin.com/bin/vgLLPYdY
+# Need the 'eventgrid' extension for preview features.
+# az extension add --name eventgrid
+
+az eventgrid topic create --location centralus --name cbusevents-custom --resource-group cbus-eventgrid --input-schema customeventschema --input-mapping-default-values dataVersion=1.0 subject=defaultSubject --input-mapping-fields eventType=event eventTime=eventDate
+az eventgrid event-subscription create --topic-name cbusevents-custom --resource-group cbus-eventgrid -n custom-mapping-eventgrid --endpoint https://mcollier-requestbin.herokuapp.com/XX
+az eventgrid event-subscription create --topic-name cbusevents-custom --resource-group cbus-eventgrid -n custom-mapping-original --event-delivery-schema inputeventschema --endpoint https://mcollier-requestbin.herokuapp.com/XX
+
+az eventgrid topic show --name cbusevents-custom -g cbus-eventgrid --query "endpoint" --output tsv
+az eventgrid topic key list --name cbusevents-custom -g cbus-eventgrid --query "key1" --output tsv

@@ -4,18 +4,18 @@
 - Open Visual Studio 2017 to `AzureServerless.sln`
 - Open Azure Storage Explorer
   - Copy sample images to storage account:
-    - Storage Account: gab2018fun
-    - Container Name: imageanalysis
+    - Storage Account: cbusimages
+    - Container Name: images
 - Open Windows Explorer to C:\temp\demo-pics
 
 
 ## 1 - Azure Functions
 ### Show a basic C# Hello World
 - `HelloWorldFunction.cs`
-- Run in Visual Studio
+- Run in Visual Studio Code
 - Show running via browser
-    - http://localhost:7071/api/HelloWorld?name=michael
-    - https://gab18fun.azurewebsites.net/api/HelloWorld?name=Columbus%20Global%20Azure%20Bootcamp&code=kr5tCathLgf/455elqlByOI/s4E42a3PaMaypWDqmSP8TfuUlhGHnw==
+    - Local:
+    - Azure: https://cbusfunimages.azurewebsites.net/api/HelloWorld?code=xxxxx==&name=testmenow
 
 
 ### Show Image Analyzer
@@ -24,27 +24,29 @@
   - Discuss Azure Key Vault and Managed Service Identity
 - Show version running in Azure
   - Place sample JSON into message queue:
-    - Storage Account: gab18fun
+    - Storage Account: cbusimages
+    - Blob Container Name: images
     - Queue Name: images
   - Show results in Cosmos DB:
-    - Account: gab18fun
+    - Account: cbusfun
     - Database: ImageAnalysis
-    - Collection: gab2018
+    - Collection: images
 
 #### Sample JSON
 ```JSON
 {
-    "PersonName": "Michael Collier",
-    "BlobName":"michael.jpg"
+    "BlobName":"IMG_3827.JPG"
+}
+
+{
+    "BlobName":"20170702_204605547_iOS.jpg"
+}
+
+{
+    "BlobName":"Shelby-GT500-GT500-SuperSwap.jpeg"
 }
 ```
 
-```JSON
-{
-    "PersonName": "sonjaandmike",
-    "BlobName":"stlucia.jpg"
-}
-```
 
 ## 2 - Logic Apps
 ### Show `ImageAnalysis` Logic App in Azure Portal
@@ -54,14 +56,14 @@
     - Sends a Twitter message containing the image analysis caption
     - In parallel, generates and saves a thumbnail version of the original image.
 2. Add an image to the storage account:
-   - Storage Account: gab18images
-   - Container Name: my-images
+   - Storage Account: cbusimages
+   - Container Name: images2
 3. Wait for Logic App to start (should be a few seconds)
 4. Wait for Twitter message (http://twitter.com/michaelcollier) 
 5. Show completed run
    - Show image analysis
    - Show thumbnail blob:
-     - Container Name: my-images-thumbnails
+     - Container Name: images2-thumbnails
 
 
 ## 3 - Event Grid
@@ -72,14 +74,25 @@
 2. Run `EventGrid` project
    - `SendToEventGrid`
    - `SendToEventGridWithSdk`
+   - `SendCustomEvent`
 3. Show Azure Function (in portal) that will handle validation and sending a text message via Twilio.
    - gab2018-events
 
-### Show Azure Storage blob subscription
-1. Show 'gab18events' which is a Logic App as an Event Grid subscripition on the 'gab18events' storage account.
-2. When a blob is created the image is analyzed by Computer Vision API, a text/SMS message is sent, and message posted to Slack.
-3. When a blob is deleted, a message is posted to Slack.
+### Create new Logic App based on Azure Blob Storage event (via Event Grid)
+  - Compose a variable
+      - split(triggerBody()?['subject'], '/')[4]/split(triggerBody()?['subject'], '/')[6]
+  - Get blob content
+      - Output (variable output)
+  - Detect Sentiment
+      - FileContent
+      - Connection Info:
+          - key: ***GET-THE-KEY***
+          - url: https://eastus.api.cognitive.microsoft.com/text/analytics/v2.0
+  - Send email via Outlook
+      - If score >= 0.5 send good email
+      - else send bad email
 
-## 4 - Final Demo - Customer Car Reviews
+
+## 4 - Final Demo - Customer Car Reviews (** OPTIONAL **)
 https://gab18siteproxy.azurewebsites.net/dashboard
 
